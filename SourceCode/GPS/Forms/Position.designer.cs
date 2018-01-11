@@ -18,6 +18,9 @@ namespace OpenGrade
         // autosteer variables for sending serial
         public Int16 guidanceLineDistanceOff, guidanceLineSteerAngle;
 
+        private double sectionTriggerDistance;
+        private vec2 prevContourPos = new vec2();
+
         //how many fix updates per sec
         public int fixUpdateHz = 5;
         public double fixUpdateTime = 0.2;
@@ -225,7 +228,19 @@ namespace OpenGrade
                 }
 
                 //add another point if on
-                AddSectionContourPathPoints();
+                //AddSectionContourPathPoints();
+
+                //To prevent drawing high numbers of triangles, determine and test before drawing vertex
+                sectionTriggerDistance = pn.Distance(pn.northing, pn.easting, prevContourPos.northing, prevContourPos.easting);
+
+                //section on off and points, contour points
+                if (sectionTriggerDistance > 1)
+                {
+                    prevContourPos.easting = pn.easting;
+                    prevContourPos.northing = pn.northing;
+                    AddSectionContourPathPoints();
+                }
+
 
                 //calc distance travelled since last GPS fix
                 distance = pn.Distance(pn.northing, pn.easting, prevFix.northing, prevFix.easting);

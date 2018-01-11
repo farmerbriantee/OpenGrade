@@ -473,31 +473,24 @@ namespace OpenGrade
                             //read how many vertices in the following patch
                             line = reader.ReadLine();
                             int verts = int.Parse(line);
-                            vec4 vecFix = new vec4(0, 0, 0, 0);
-                            
+                            //CContourPt vecFix = new vec4(0, 0, 0, 0);
+
                             for (int v = 0; v < verts; v++)
                             {
                                 line = reader.ReadLine();
                                 string[] words = line.Split(',');
-                                vecFix.easting = double.Parse(words[0], CultureInfo.InvariantCulture);
-                                vecFix.heading = double.Parse(words[1], CultureInfo.InvariantCulture);
-                                vecFix.northing = double.Parse(words[2], CultureInfo.InvariantCulture);
-                                vecFix.altitude = double.Parse(words[3], CultureInfo.InvariantCulture);
 
-                                ct.ptList.Add(vecFix);
-                            }
-                        }
+                                CContourPt point = new CContourPt(
+                                    double.Parse(words[0], CultureInfo.InvariantCulture),
+                                    double.Parse(words[1], CultureInfo.InvariantCulture),
+                                    double.Parse(words[2], CultureInfo.InvariantCulture),
+                                    double.Parse(words[3], CultureInfo.InvariantCulture),
+                                    double.Parse(words[4], CultureInfo.InvariantCulture),
+                                    double.Parse(words[5], CultureInfo.InvariantCulture),
+                                    double.Parse(words[6], CultureInfo.InvariantCulture),
+                                    double.Parse(words[7], CultureInfo.InvariantCulture));
 
-                        int cnt = ct.ptList.Count;
-                        if (cnt > 2)
-                        {
-                            ct.topoList.Clear();
-                            vec4 point = new vec4(0, 0, 0, ct.ptList[0].altitude);
-                            ct.topoList.Add(point);
-                            for (int i = 1; i < cnt; i++)
-                            {
-                                point = new vec4(i, 0, 0, ct.ptList[i].altitude);
-                                ct.topoList.Add(point);
+                            ct.ptList.Add(point);
                             }
                         }
                     }
@@ -508,6 +501,10 @@ namespace OpenGrade
                         var form = new FormTimedMessage(4000, "Contour File is Corrupt", "But Field is Loaded");
                         form.Show();
                     }
+
+                    //calc mins maxes
+                    CalculateMinMaxCut();
+                    CalculateTotalCutFillLabels();
                 }
             }
 
@@ -810,7 +807,11 @@ namespace OpenGrade
                             writer.WriteLine(Math.Round((ct.ptList[i].easting), 3).ToString(CultureInfo.InvariantCulture) + "," +
                                 Math.Round(ct.ptList[i].heading, 3).ToString(CultureInfo.InvariantCulture) + "," +
                                 Math.Round(ct.ptList[i].northing, 3).ToString(CultureInfo.InvariantCulture) + "," +
-                                Math.Round(ct.ptList[i].altitude, 3).ToString(CultureInfo.InvariantCulture));
+                                Math.Round(ct.ptList[i].altitude, 3).ToString(CultureInfo.InvariantCulture) + "," +
+                                Math.Round(ct.ptList[i].latitude, 7).ToString(CultureInfo.InvariantCulture) + "," +
+                                Math.Round(ct.ptList[i].longitude, 7).ToString(CultureInfo.InvariantCulture) + "," +
+                                Math.Round(ct.ptList[i].cutAltitude, 7).ToString(CultureInfo.InvariantCulture) + "," +
+                                Math.Round(ct.ptList[i].lastPassAltitude, 3).ToString(CultureInfo.InvariantCulture));
                         }
                     
                 }
@@ -878,8 +879,6 @@ namespace OpenGrade
 
             }
         }
-
-
 
         //save all the flag markers
         public void FileSaveABLine()

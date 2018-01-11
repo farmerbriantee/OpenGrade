@@ -11,7 +11,6 @@ namespace OpenGrade
        //class variables
         private readonly FormGPS mf = null;
 
-        private double toolTurnOffDelay, toolLookAhead;
         private double antennaHeight, antennaPivot, wheelbase;
 
         private bool isPivotBehindAntenna;

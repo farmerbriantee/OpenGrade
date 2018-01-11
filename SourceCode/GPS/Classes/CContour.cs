@@ -4,6 +4,35 @@ using SharpGL;
 
 namespace OpenGrade
 {
+    public class CContourPt
+    {
+        public double altitude { get; set; }
+        public double easting { get; set; }
+        public double northing { get; set; }
+        public double heading { get; set; }
+        public double cutAltitude { get; set; }
+        public double lastPassAltitude { get; set; }
+        public double latitude { get; set; }
+        public double longitude { get; set; }
+
+        //constructor
+        public CContourPt(double _easting, double _heading, double _northing, 
+                            double _altitude, double _lat, double _long, 
+                            double _cutAltitude = -1, double _lastPassAltitude = -1  )
+        {
+            easting = _easting;
+            northing = _northing;
+            heading = _heading;
+            altitude = _altitude;
+            latitude = _lat;
+            longitude = _long;
+
+            //optional parameters
+            cutAltitude = _cutAltitude;
+            lastPassAltitude = _lastPassAltitude;
+        }
+    }
+
     public class CContour
     {
         //copy of the mainform address
@@ -11,6 +40,9 @@ namespace OpenGrade
         private readonly OpenGL gl;
 
         public bool isContourOn, isContourBtnOn;
+        public double slope = 0.002;
+
+        public List<CContourPt> ptList = new List<CContourPt>();
 
         //used to determine if section was off and now is on or vice versa
         public bool wasSectionOn;
@@ -48,16 +80,16 @@ namespace OpenGrade
         public double ppRadiusCT;
 
         //list of contour data from GPS
-        public List<vec4> ptList = new List<vec4>();
+        //public List<vec4> ptList = new List<vec4>();
 
         //the manually picked list
         public List<vec2> drawList = new List<vec2>();
 
         //converted from drawn line to all points cut line
-        public List<vec4> cutList = new List<vec4>();
+        //public List<vec4> cutList = new List<vec4>();
 
         //list of the list of individual Lines for entire field
-        public List<vec4> topoList = new List<vec4>();
+        //public List<CContourPt> topoList = new List<CContourPt>();
 
         //constructor
         public CContour(OpenGL _gl, FormGPS _f)
@@ -75,35 +107,24 @@ namespace OpenGrade
             isContourOn = true;
             //reuse ptList
             ptList.Clear();
-            topoList.Clear();
 
-            vec4 point = new vec4(mf.pn.easting, mf.fixHeading, mf.pn.northing, mf.pn.altitude);
+            CContourPt point = new CContourPt(mf.pn.easting, mf.fixHeading, mf.pn.northing, mf.pn.altitude, mf.pn.latitude, mf.pn.longitude);
             ptList.Add(point);
-
-            point = new vec4(0, 0, 0, mf.pn.altitude);
-            topoList.Add(point);
         }
 
         //Add current position to ptList
         public void AddPoint()
         {
-            vec4 point = new vec4(mf.pn.easting, mf.fixHeading, mf.pn.northing, mf.pn.altitude);
+            CContourPt point = new CContourPt(mf.pn.easting, mf.fixHeading, mf.pn.northing, mf.pn.altitude, mf.pn.latitude, mf.pn.longitude);
             ptList.Add(point);
 
-            //add the elevation view
-            point = new vec4(ptList.Count, 0,0, mf.pn.altitude);
-            topoList.Add(point);
         }
 
         //End the strip
         public void StopContourLine()
         {
-            vec4 point = new vec4(mf.pn.easting, mf.fixHeading, mf.pn.northing, mf.pn.altitude);
+            CContourPt point = new CContourPt(mf.pn.easting, mf.fixHeading, mf.pn.northing, mf.pn.altitude, mf.pn.latitude, mf.pn.longitude);
             ptList.Add(point);
-
-            //final point for altitude
-            point = new vec4(ptList.Count, 0, 0, mf.pn.altitude);
-            topoList.Add(point);
 
             //turn it off
             isContourOn = false;

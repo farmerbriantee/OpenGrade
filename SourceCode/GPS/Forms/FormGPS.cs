@@ -1,34 +1,4 @@
 ﻿//Please, if you use this, share the improvements
-/*
- * seq = new CSequence(this);
-
-   sim = new CSim(this);
-
-             void OrientCB(BrickIMUV2 sender, short heading, short roll, short pitch)
-            {
-
-               // string s = "heading: {0:F02}, roll: {1:F02}, pitch: {2:F02}";
-              //  string f = String.Format(s, heading / 16, roll / 16, pitch / 16);
-                mc.gyroHeading = heading;
-                mc.rollRaw = roll;
-               // Console.WriteLine(f);
-            }
-
-            IPConnection ipcon = new IPConnection(); // Create IP connection
-            BrickIMUV2 imu = new BrickIMUV2(UID, ipcon); // Create device object
-
-            ipcon.Connect(HOST, PORT); // Connect to brickd
-                                       // Don't use device before ipcon is connected
-
-            // Register quaternion callback to function QuaternionCB
-            imu.OrientationCallback += OrientCB;
-
-            // Set period for quaternion callback to 0.1s (100ms)
-            imu.SetOrientationPeriod(100);
-            
-            //start the stopwatch
-            swFrame.Start();
- */
 
 using System;
 using System.Diagnostics;
@@ -864,108 +834,123 @@ namespace OpenGrade
         {
             sim.altitude = (double)nudElevation.Value;
         }
-        private void btnDnWindowGain_MouseDown(object sender, MouseEventArgs e)
+        private void btnStartDraw_Click(object sender, EventArgs e)
         {
-            if (altitudeWindowGain > 10)
-            {
-                altitudeWindowGain -= 10.0;
-            }
-            else
-            {
-                altitudeWindowGain -= 0.2;
-                if (altitudeWindowGain < 0.2) altitudeWindowGain = 0.2;
-            }
-            lblWindowGain.Text = altitudeWindowGain.ToString("N1");
-
+            ct.drawList.Clear();
+            ct.isDrawingRefLine = true;
+            lblCut.Text = "-";
+            lblFill.Text = "-";
+            lblFill.Text = "-";
+            lblFill.Text = "-";
+            lblFill.Text = "-";
+            lblFill.Text = "-";
         }
+
 
         private void btnDoneDraw_Click(object sender, EventArgs e)
         {
-           vec4 temp = new vec4();
            ct.isDrawingRefLine = false;
             int cnt = ct.ptList.Count;
             int drawPts = ct.drawList.Count-1;
             double slope = 0.5;
 
-            for (int i = 0; i < cnt; i++)
+            if (drawPts > 0)
             {
-                if (i < ct.drawList[0].easting)
+                for (int i = 0; i < cnt; i++)
                 {
-                    temp.easting = i;
-                    temp.altitude = -1;
-                    temp.northing = 0;
-                    temp.heading = 0;
-                    ct.cutList.Add(temp);
-                    continue;
-                }
-
-                if (i > ct.drawList[drawPts].easting)
-                {
-                    temp.easting = i;
-                    temp.altitude = -1;
-                    temp.northing = 0;
-                    temp.heading = 0;
-                    ct.cutList.Add(temp);
-                    continue;
-                }
-
-                //find out where its between
-                for (int j = 0; j < drawPts; j++)
-                {
-                    if (i >= ct.drawList[j].easting && i <= ct.drawList[j + 1].easting)
+                    //points before the drawn line are -1
+                    if (i < ct.drawList[0].easting)
                     {
-                        slope = (ct.drawList[j + 1].northing - ct.drawList[j].northing) / (ct.drawList[j + 1].easting - ct.drawList[j].easting);
+                        ct.ptList[i].cutAltitude = -1;
+                        continue;
+                    }
 
-                        //(double)i - ct.drawList[j].easting);
-                        temp.easting = i;
-                        temp.altitude = ((i - ct.drawList[j].easting) * slope) + ct.drawList[j].northing;
-                        temp.northing = 0;
-                        temp.heading = 0;
-                        ct.cutList.Add(temp);
-                        break;
+                    //points after drawn line are -1
+                    if (i > ct.drawList[drawPts].easting)
+                    {
+                        ct.ptList[i].cutAltitude = -1;
+                        continue;
+                    }
+
+                    //find out where its between
+                    for (int j = 0; j < drawPts; j++)
+                    {
+                        if (i >= ct.drawList[j].easting && i <= ct.drawList[j + 1].easting)
+                        {
+                            slope = (ct.drawList[j + 1].northing - ct.drawList[j].northing) / (ct.drawList[j + 1].easting - ct.drawList[j].easting);
+                            ct.ptList[i].cutAltitude = ((i - ct.drawList[j].easting) * slope) + ct.drawList[j].northing;
+                            break;
+                        }
                     }
                 }
-            }
 
+                //Fill in cut and fill
+                CalculateTotalCutFillLabels();
+            }
+        }
+
+        private void CalculateTotalCutFillLabels()
+        {
             lblDrawSlope.Text = "***";
 
-            double cut=0; double fill=0; double delta;
+            double cut = 0; double fill = 0; double delta;
+            int cnt = ct.ptList.Count;
 
-            for ( int i = 0; i < cnt; i++)
+            for (int i = 0; i < cnt; i++)
             {
-                if (ct.cutList[i].altitude == -1) continue;
+                if (ct.ptList[i].cutAltitude == -1) continue;
 
-                delta = ct.cutList[i].altitude - ct.topoList[i].altitude;
-                if (delta < 0)
+                delta = ct.ptList[i].cutAltitude - ct.ptList[i].altitude;
+                if (delta > 0)
                 {
-                    cut += delta;
+                    fill += delta;
                     delta = 0;
                 }
                 else
                 {
-                    fill += delta;
+                    delta *= -1;
+                    cut += delta;
                     delta = 0;
                 }
             }
 
             lblCut.Text = cut.ToString("N2");
-            lblFill.Text = fill.ToString("N2");            
+            lblFill.Text = fill.ToString("N2");
+
+            delta = (cut - fill);
+            if (delta >= 0) lblCutFillRatio.Text = " Pile: " + delta.ToString("N2");
+
+            else lblCutFillRatio.Text = "Hole: " + (delta).ToString("N2");
         }
 
-        private void btnUpWindowGain_MouseDown(object sender, MouseEventArgs e)
+        private void btnAutoDraw_Click(object sender, EventArgs e)
         {
-            if (altitudeWindowGain < 10) altitudeWindowGain += 0.2;
-            else  altitudeWindowGain += 10.0;
-            lblWindowGain.Text = altitudeWindowGain.ToString("N1");
+            if (ct.ptList.Count == 0) return;
+
+            int cnt = ct.ptList.Count;
+            int drawPts = ct.drawList.Count - 1;
+
+            //convert from percent slope
+            double slope = (double)nudMinSlope.Value * 0.01;
+
+            for (int i = 0; i < cnt; i++)
+            {
+                //first point is always the altitude
+                if (i == 0)
+                {
+                    ct.ptList[0].cutAltitude = ct.ptList[0].altitude;
+                    continue;
+                }
+
+                else
+                {
+                    if (ct.ptList[i - 1].cutAltitude < ct.ptList[i].altitude)
+                        ct.ptList[i].cutAltitude = ct.ptList[i - 1].cutAltitude - slope;
+                    else ct.ptList[i].cutAltitude = ct.ptList[i].altitude;
+                }
+            }
         }
-        private void btnStartDraw_Click(object sender, EventArgs e)
-        {
-            ct.drawList.Clear();
-            ct.cutList.Clear();
-            ct.isDrawingRefLine = true;
-            lblCut.Text = "-";
-            lblFill.Text = "-";
-        }             
+
         private void btnDeleteLastPoint_Click(object sender, EventArgs e)
         {
             int ptCnt = ct.drawList.Count;
@@ -1110,7 +1095,12 @@ namespace OpenGrade
             ct.isContourBtnOn = false;
             ct.isContourOn = false;
             ct.ptList.Clear();
-            ct.topoList.Clear();
+            ct.drawList.Clear();
+            lblCut.Text = "*";
+            lblFill.Text = "*";
+            lblCutFillRatio.Text = "*";
+            lblDrawSlope.Text = "*";
+
 
             //change images to reflect on off
             btnABLine.Image = Properties.Resources.ABLineOff;
@@ -1129,8 +1119,6 @@ namespace OpenGrade
 
             //reset all Port Module values
             mc.ResetAllModuleCommValues();
-
-            lblDrawSlope.Text = " **";
         }
 
         //bring up field dialog for new/open/resume

@@ -115,8 +115,8 @@ namespace OpenGrade
 
         private void btnAPoint_Click(object sender, EventArgs e)
         {
-            mf.ABLine.refPoint1.easting = mf.prevFix.easting;
-            mf.ABLine.refPoint1.northing = mf.prevFix.northing; 
+            mf.ABLine.refPoint1.easting = mf.pn.easting;
+            mf.ABLine.refPoint1.northing = mf.pn.northing; 
             btnAPoint.Enabled = false;
             btnUpABHeading.Enabled = true;
             btnDnABHeading.Enabled = true;

@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using SharpGL;
@@ -374,39 +375,36 @@ namespace OpenGrade
         private void openGLControlBack_OpenGLDraw(object sender, RenderEventArgs args)
         {
             OpenGL gl = openGLControlBack.OpenGL;
+
+            //antialiasing - fastest
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
 
-            //gl.Enable(OpenGL.GL_LINE_SMOOTH);
-            //gl.Enable(OpenGL.GL_BLEND);
+            gl.Enable(OpenGL.GL_LINE_SMOOTH);
+            gl.Enable(OpenGL.GL_BLEND);
 
-            //gl.Hint(OpenGL.GL_LINE_SMOOTH_HINT, OpenGL.GL_FASTEST);
-            //gl.Hint(OpenGL.GL_POINT_SMOOTH_HINT, OpenGL.GL_FASTEST);
-            //gl.Hint(OpenGL.GL_POLYGON_SMOOTH_HINT, OpenGL.GL_FASTEST);
+            gl.Hint(OpenGL.GL_LINE_SMOOTH_HINT, OpenGL.GL_FASTEST);
+            gl.Hint(OpenGL.GL_POINT_SMOOTH_HINT, OpenGL.GL_FASTEST);
+            gl.Hint(OpenGL.GL_POLYGON_SMOOTH_HINT, OpenGL.GL_FASTEST);
 
             gl.LoadIdentity();                  // Reset The View
-            CalculateMinMaxCut();
 
-            gl.Translate(0, 0, -maxCutDistance);
+            //if adding new points recalc mins maxes
+            if (manualBtnState == btnStates.Rec) CalculateMinMaxCut();
+
+            //autogain the window
+            if ((maxFieldY - minFieldY) != 0)
+                altitudeWindowGain = (Math.Abs(cameraDistanceZ / (maxFieldY - minFieldY))) * 0.85;
+            else altitudeWindowGain = 10;
 
             //translate to that spot in the world 
-            gl.Translate(-CutCenterX, -CutCenterY, 0);
+            gl.Translate(0, 0, -cameraDistanceZ);
+            gl.Translate(-centerX, -centerY, 0);
 
             gl.Enable(OpenGL.GL_TEXTURE_2D);
             gl.Color(1,1,1);
 
-            //the floor
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, texture[1]);	// Select Our Texture
-            gl.Begin(OpenGL.GL_TRIANGLE_STRIP);				            // Build Quad From A Triangle Strip
-            gl.TexCoord(0, 0); gl.Vertex(-100, -100, 0.0);                // Top Right
-            gl.TexCoord(1, 0); gl.Vertex(100, -100, 0.0);               // Top Left
-            gl.TexCoord(0, 1); gl.Vertex(-100, 100, 0.0);               // Bottom Right
-            gl.TexCoord(1, 1); gl.Vertex(100, 100, 0.0);              // Bottom Left
-            gl.End();						// Done Building Triangle Strip
-            gl.Disable(OpenGL.GL_TEXTURE_2D);
-            //patch color
-
             int closestPoint = 0;
-            int count2 = ct.topoList.Count;
+            int count2 = ct.ptList.Count;
             gl.LineWidth(2);
 
             if (count2 > 0)
@@ -426,106 +424,95 @@ namespace OpenGrade
                 gl.Begin(OpenGL.GL_TRIANGLE_STRIP);
                 for (int i = 0; i < count2; i++)
                 {
-                    gl.Vertex(ct.topoList[i].easting,
-                      (((ct.topoList[i].altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                    gl.Vertex(ct.topoList[i].easting,-200, 0);
+                    gl.Vertex(i,
+                      (((ct.ptList[i].altitude - centerY) * altitudeWindowGain) + centerY), 0);
+                    gl.Vertex(i, -10000, 0);
                 }
                 gl.End();
 
                 //cut line drawn in full
-                int cutPts = ct.cutList.Count;
+                int cutPts = ct.ptList.Count;
                 if (cutPts > 0)
                 {
                     gl.Color(0.974f, 0.0f, 0.12f);
                     gl.Begin(OpenGL.GL_LINE_STRIP);
                     for (int i = 0; i < count2; i++)
                     {
-                        if (ct.cutList[i].altitude > 0)
-                            gl.Vertex(ct.cutList[i].easting, (((ct.cutList[i].altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
+                        if (ct.ptList[i].cutAltitude > 0)
+                            gl.Vertex(i, (((ct.ptList[i].cutAltitude - centerY) * altitudeWindowGain) + centerY), 0);
                     }
                     gl.End();
-
-                    lblBladeDelta.Text = (pn.altitude - ct.cutList[closestPoint].altitude).ToString("N3");
-
-
-                    //gl.Color(0.0f, 1.0f, 0.0f);
-                    //gl.PointSize(2);
-                    //gl.Begin(OpenGL.GL_POINTS);
-                    //for (int i = 0; i < count2; i++)
-                    //    if (ct.cutList[i].altitude > 0)
-                    //        gl.Vertex(ct.cutList[i].easting, (((ct.cutList[i].altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                    //gl.End();
-
                 }
-
 
                 //crosshairs same spot as mouse - long
                 gl.LineWidth(2);
+                gl.Enable(OpenGL.GL_LINE_STIPPLE);
+                gl.LineStipple(1, 0x0700);
+
                 gl.Begin(OpenGL.GL_LINES);
-                gl.Color(0.97020f, 0.65f, 0.0f);
+                gl.Color(0.0f, 0.0f, 0.0f);
                 gl.Vertex(screen2FieldPt.easting, 3000, 0);
                 gl.Vertex(screen2FieldPt.easting, -3000, 0);
-                gl.Vertex(-10, (((screen2FieldPt.northing - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                gl.Vertex(1000, (((screen2FieldPt.northing - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
+                gl.Vertex(-10, (((screen2FieldPt.northing - centerY) * altitudeWindowGain) + centerY), 0);
+                gl.Vertex(1000, (((screen2FieldPt.northing - centerY) * altitudeWindowGain) + centerY), 0);
                 gl.End();
-
+                gl.Disable(OpenGL.GL_LINE_STIPPLE);
 
                 //draw the guide line being built
                 if (ct.isDrawingRefLine)
                 {
                     gl.LineWidth(2);
-                    gl.Color(0.995f, 0.0f, 0.150f);
+                    gl.Color(0.15f, 0.950f, 0.150f);
                     int cutCnt = ct.drawList.Count;
                     if (cutCnt > 0)
                     {
                         gl.Begin(OpenGL.GL_LINE_STRIP);
                         for (int i = 0; i < cutCnt; i++)
-                            gl.Vertex(ct.drawList[i].easting, (((ct.drawList[i].northing - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
+                            gl.Vertex(ct.drawList[i].easting, (((ct.drawList[i].northing - centerY) * altitudeWindowGain) + centerY), 0);
                         gl.End();
 
-                        gl.Color(0.0f, 1.0f, 0.0f);
+                        if (slopeDraw < (double)nudMinSlope.Value)  gl.Color(0.25f, 0.970f, 0.350f);
+                        else gl.Color(0.915f, 0.0f, 0.970f);
+                        gl.Begin(OpenGL.GL_LINES);
+                        //for (int i = 0; i < cutCnt; i++)
+                            gl.Vertex(ct.drawList[cutCnt - 1].easting, (((ct.drawList[cutCnt - 1].northing - centerY) * altitudeWindowGain) + centerY), 0);
+                            gl.Vertex(screen2FieldPt.easting, ((( screen2FieldPt.northing - centerY) * altitudeWindowGain) + centerY), 0);
+                        gl.End();
+
+                        gl.Color(1.0f, 1.0f, 0.0f);
                         gl.PointSize(4);
                         gl.Begin(OpenGL.GL_POINTS);
                         for (int i = 0; i < cutCnt; i++)
-                            gl.Vertex(ct.drawList[i].easting, (((ct.drawList[i].northing - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
+                            gl.Vertex(ct.drawList[i].easting, (((ct.drawList[i].northing - centerY) * altitudeWindowGain) + centerY), 0);
                         gl.End();
                     }
                 }
 
-                //gl.LineWidth(1);
-                //gl.Begin(OpenGL.GL_LINES);
-                //gl.Color(0.20f, 0.2f, 0.2f);
-                //gl.Vertex(ct.cutStart.easting, (((ct.cutStart.northing + 0.2 - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                //gl.Vertex(ct.cutStop.easting, (((ct.cutStop.northing + 0.2 - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                //gl.Vertex(ct.cutStart.easting, (((ct.cutStart.northing - 0.2 - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                //gl.Vertex(ct.cutStop.easting, (((ct.cutStop.northing - 0.2 - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                //gl.End();
-
-                if (minDist < 25)
+                if (minDist < 15)
                 {
                     //draw the actual elevation lines and blade
                     gl.LineWidth(8);
                     gl.Begin(OpenGL.GL_LINES);
                     gl.Color(0.95f, 0.90f, 0.0f);
-                    gl.Vertex(ct.topoList[closestPoint].easting, (((pn.altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                    gl.Vertex(ct.topoList[closestPoint].easting, 10000, 0);
+                    gl.Vertex(closestPoint, (((pn.altitude - centerY) * altitudeWindowGain) + centerY), 0);
+                    gl.Vertex(closestPoint, 10000, 0);
                     gl.End();
 
                     //the skinny actual elevation lines
                     gl.LineWidth(1);
                     gl.Begin(OpenGL.GL_LINES);
                     gl.Color(0.990f, 0.9750f, 0.00f);
-                    gl.Vertex(ct.topoList[closestPoint].easting - 5000, (((pn.altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                    gl.Vertex(ct.topoList[closestPoint].easting + 5000, (((pn.altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
-                    gl.Vertex(ct.topoList[closestPoint].easting, -10000, 0);
-                    gl.Vertex(ct.topoList[closestPoint].easting, 10000, 0);
+                    gl.Vertex(-5000, (((pn.altitude - centerY) * altitudeWindowGain) + centerY), 0);
+                    gl.Vertex(5000, (((pn.altitude - centerY) * altitudeWindowGain) + centerY), 0);
+                    gl.Vertex(closestPoint, -10000, 0);
+                    gl.Vertex(closestPoint, 10000, 0);
 
                     //the dashed accent of ground profile
                     gl.Color(0.0f, 0.0f, 0.00f);
                     for (int i = 0; i < count2; i++)
                     {
-                        gl.Vertex(ct.topoList[i].easting,
-                          (((ct.topoList[i].altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
+                        gl.Vertex(i,
+                          (((ct.ptList[i].altitude - centerY) * altitudeWindowGain) + centerY), 0);
                     }
                     gl.End();
 
@@ -533,126 +520,28 @@ namespace OpenGrade
                     gl.Color(0.0f, 0.0f, 0.0f);
                     gl.PointSize(8);
                     gl.Begin(OpenGL.GL_POINTS);
-                    gl.Vertex(ct.topoList[closestPoint].easting, (((pn.altitude - CutCenterY) * altitudeWindowGain) + CutCenterY), 0);
+                    gl.Vertex(closestPoint, (((pn.altitude - centerY) * altitudeWindowGain) + centerY), 0);
                     gl.End();
-
 
                     //calculate blade to guideline delta
                     //double temp = (double)closestPoint / (double)count2;
-                    //cutDelta = pn.altitude - (((ct.cutStop.northing - ct.cutStart.northing) * temp) + ct.cutStart.northing);
+                    if (ct.ptList[closestPoint].cutAltitude > 0)
+                    {
+                        cutDelta = pn.altitude - ct.ptList[closestPoint].cutAltitude;
+                        lblCutDelta.Text = cutDelta.ToString("N3");
+                    }
+                    else
+                    {
+                        cutDelta = 9999;
+                        lblCutDelta.Text = cutDelta.ToString("N3");
+                    }
                 }
-            }
-
-            ////elevation of guide line
-            //if (ct.topoList.Count > 0)
-            //{
-            //    gl.DrawText(50, 60, 0, 1, 0, "Tahoma", 48, ct.topoList[closestPoint].altitude.ToString("N2"));
-            //    gl.DrawText(openGLControlBack.Width/4, 10, 1, 0, 0, "Tahoma", 48, cutDelta.ToString("N4"));
-            //}
-            ////actual elevation of cutting point
-            //gl.DrawText(50, 10, 1, 1, 0, "Tahoma", 48, pn.altitude.ToString("N2"));
-            //gl.DrawText(50, 110, 1, 1, 0, "Tahoma", 36, minDist.ToString("N2"));
-
-
-            //gl.Disable(OpenGL.GL_BLEND);
-            //gl.Enable(OpenGL.GL_DEPTH_TEST);
-
-
-            ////// 2D Ortho --------------------------
-            //gl.MatrixMode(OpenGL.GL_PROJECTION);
-            //gl.PushMatrix();
-            //gl.LoadIdentity();
-
-            ////negative and positive on width, 0 at top to bottom ortho view
-            //gl.Ortho2D(-(double)Width / 2, (double)Width / 2, (double)Height, 0);
-
-            ////  Create the appropriate modelview matrix.
-            //gl.MatrixMode(OpenGL.GL_MODELVIEW);
-            //gl.PushMatrix();
-            //gl.LoadIdentity();
-
-            //gl.Color(1,1,1);
-            ////if (isSkyOn)
-            //{
-            //    //draw the background when in 3D
-
-            //    //-10 to -32 (top) is camera pitch range. Set skybox to line up with horizon 
-            //    double hite = 0.5;
-            //    //hite = 0.001;
-
-            //    //the background
-            //    double winLeftPos = -(double)Width / 2;
-            //    double winRightPos = -winLeftPos;
-            //    gl.Enable(OpenGL.GL_TEXTURE_2D);
-            //    gl.BindTexture(OpenGL.GL_TEXTURE_2D, texture[0]);       // Select Our Texture
-
-            //    gl.Begin(OpenGL.GL_TRIANGLE_STRIP);             // Build Quad From A Triangle Strip
-            //    gl.TexCoord(0, 0); gl.Vertex(winRightPos, 0.0); // Top Right
-            //    gl.TexCoord(1, 0); gl.Vertex(winLeftPos, 0.0); // Top Left
-            //    gl.TexCoord(0, 1); gl.Vertex(winRightPos, hite * (double)Height); // Bottom Right
-            //    gl.TexCoord(1, 1); gl.Vertex(winLeftPos, hite * (double)Height); // Bottom Left
-            //    gl.End();                       // Done Building Triangle Strip
-
-            //    //disable, straight color
-            //    gl.Disable(OpenGL.GL_TEXTURE_2D);
-
-            //}
-
-            //// dot background
-            //gl.PointSize(8.0f);
-            //gl.Color(0.00f, 1.0f, 0.0f);
-            //gl.Begin(OpenGL.GL_POINTS);
-            //for (int i = -10; i < 0; i++) gl.Vertex((i * 40), 20);
-            //for (int i = 1; i < 11; i++) gl.Vertex((i * 40), 20);
-            //gl.End();
-
-            //gl.Flush();//finish openGL commands
-            //gl.PopMatrix();//  Pop the modelview.
-
-            ////  back to the projection and pop it, then back to the model view.
-            //gl.MatrixMode(OpenGL.GL_PROJECTION);
-            //gl.PopMatrix();
-            //gl.MatrixMode(OpenGL.GL_MODELVIEW);
-
-            ////reset point size
-            //gl.PointSize(1.0f);
-            //gl.Flush();
-        }
-
-            Point fixPt = new Point();
-            vec2 plotPt = new vec2();
-
-        private void openGLControlBack_MouseDown(object sender, MouseEventArgs e)
-        {
-
-            if (ct.isDrawingRefLine)
-            {
-                //OpenGL has line 0 at bottom, Windows at top, so convert
-                Point pt = openGLControlBack.PointToClient(Cursor.Position);
-                lblX.Text = (pt.X).ToString();
-                lblY.Text = ((openGLControlBack.Height - pt.Y) - openGLControlBack.Height / 2).ToString();
-
-                ////Convert to Origin in the center of window, 700 pixels
-                fixPt.X = pt.X;
-                fixPt.Y = ((openGLControlBack.Height - pt.Y) - openGLControlBack.Height / 2);
-
-                //convert screen coordinates to field coordinates
-                plotPt.easting = (int)(((double)fixPt.X) * (double)maxCutDistance / openGLControlBack.Width);
-                plotPt.northing = ((double)fixPt.Y) * (double)maxCutDistance / (openGLControlBack.Height * altitudeWindowGain);
-                plotPt.northing += CutCenterY;
-
-                lblEast.Text = plotPt.easting.ToString();
-                lblNorth.Text = plotPt.northing.ToString();
-
-                    //make sure not going backwards
-                int cnt = ct.drawList.Count;
-                if (cnt > 0)
+                else
                 {
-                    if (ct.drawList[cnt-1].easting < plotPt.easting)
-                    ct.drawList.Add(plotPt);
+                    lblCutDelta.Text = "**";
+                    cutDelta = 9999;
                 }
-                //is first point
-                else ct.drawList.Add(plotPt);
+
             }
         }
 
@@ -665,20 +554,58 @@ namespace OpenGrade
             screenPt.Y = ((openGLControlBack.Height - e.Location.Y) - openGLControlBack.Height / 2);
 
             //convert screen coordinates to field coordinates
-            screen2FieldPt.easting = ((double)screenPt.X) * (double)maxCutDistance / openGLControlBack.Width;
-            //plotPt.easting += fieldCenterX;
-            screen2FieldPt.northing = ((double)screenPt.Y) * (double)maxCutDistance / (openGLControlBack.Height * altitudeWindowGain);
-            screen2FieldPt.northing += CutCenterY;
+            screen2FieldPt.easting = ((double)screenPt.X) * (double)cameraDistanceZ / openGLControlBack.Width;
+            screen2FieldPt.northing = ((double)screenPt.Y) * (double)cameraDistanceZ / (openGLControlBack.Height * altitudeWindowGain);
+            screen2FieldPt.northing += centerY;
 
-            stripTopoLocation.Text = ((int)(screen2FieldPt.easting)).ToString() + "," + screen2FieldPt.northing.ToString("N3");
+            stripTopoLocation.Text = ((int)(screen2FieldPt.easting)).ToString() + ": " + screen2FieldPt.northing.ToString("N3");
+            lblDrawAltitude.Text= screen2FieldPt.northing.ToString("N3");
 
             if (ct.isDrawingRefLine)
             {
                 int cnt = ct.drawList.Count;
                 if (cnt > 0)
                 {
-                    lblDrawSlope.Text = (((screen2FieldPt.northing - ct.drawList[cnt - 1].northing) 
-                    / (screen2FieldPt.easting - ct.drawList[cnt - 1].easting))* 100).ToString("N5");
+                    slopeDraw = (((screen2FieldPt.northing - ct.drawList[cnt - 1].northing)
+                   / (screen2FieldPt.easting - ct.drawList[cnt - 1].easting)) * 100);
+                    lblDrawSlope.Text = slopeDraw.ToString("N5");
+
+                    CalculateCutFillWhileMouseMove();
+                }
+            }
+        }
+
+            Point fixPt = new Point();
+            vec2 plotPt = new vec2();
+
+        private void openGLControlBack_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (ct.isDrawingRefLine)
+            {
+                //OpenGL has line 0 at bottom, Windows at top, so convert
+                Point pt = openGLControlBack.PointToClient(Cursor.Position);
+
+                ////Convert to Origin in the center of window, 700 pixels
+                fixPt.X = pt.X;
+                fixPt.Y = ((openGLControlBack.Height - pt.Y) - openGLControlBack.Height / 2);
+
+                //convert screen coordinates to field coordinates
+                plotPt.easting = (int)(((double)fixPt.X) * (double)cameraDistanceZ / openGLControlBack.Width);
+                plotPt.northing = ((double)fixPt.Y) * (double)cameraDistanceZ / (openGLControlBack.Height * altitudeWindowGain);
+                plotPt.northing += centerY;
+
+                //make sure not going backwards
+                int cnt = ct.drawList.Count;
+                if (cnt > 0)
+                {
+                    if (ct.drawList[cnt - 1].easting < plotPt.easting)
+                        ct.drawList.Add(plotPt);
+                    else TimedMessageBox(1500, "Point Invalid", "Ahead of Last Point Only");
+                }
+                //is first point
+                else
+                {
+                    ct.drawList.Add(plotPt);
                 }
             }
         }
@@ -702,51 +629,121 @@ namespace OpenGrade
             gls.MatrixMode(OpenGL.GL_MODELVIEW);
         }
 
-        double maxCutX, maxCutY, minCutX, minCutY, CutCenterX, CutCenterY, maxCutDistance;
-        //determine mins maxs of cut line
+        double maxFieldX, maxFieldY, minFieldX, minFieldY, centerX, centerY, cameraDistanceZ;
 
+        //determine mins maxs of contour and altitude
         private void CalculateMinMaxCut()
         {
-            minCutX = 9999999; minCutY = 9999999;
-            maxCutX = -9999999; maxCutY = -9999999;
+            minFieldX = 9999999; minFieldY = 9999999;
+            maxFieldX = -9999999; maxFieldY = -9999999;
 
             //every time the section turns off and on is a new patch
-            int cnt = ct.topoList.Count;
+            int cnt = ct.ptList.Count;
 
             if (cnt > 0)
             {
-                //for every new chunk of patch
                 for (int i = 0; i < cnt; i++)
                 {
-                    double x = ct.topoList[i].easting;
-                    double y = ct.topoList[i].altitude;
+                    double x = i;
+                    double y = ct.ptList[i].altitude;
 
                     //also tally the max/min of Cut x and z
-                    if (minCutX > x) minCutX = x;
-                    if (maxCutX < x) maxCutX = x;
-                    if (minCutY > y) minCutY = y;
-                    if (maxCutY < y) maxCutY = y;
+                    if (minFieldX > x) minFieldX = x;
+                    if (maxFieldX < x) maxFieldX = x;
+                    if (minFieldY > y) minFieldY = y;
+                    if (maxFieldY < y) maxFieldY = y;
                 }                
             }
 
-            if (maxCutX == -9999999 | minCutX == 9999999 | maxCutY == -9999999 | minCutY == 9999999)
+            if (maxFieldX == -9999999 | minFieldX == 9999999 | maxFieldY == -9999999 | minFieldY == 9999999)
             {
-                maxCutX = 0; minCutX = 0; maxCutY = 0; minCutY = 0;
-                maxCutDistance = 100;
+                maxFieldX = 0; minFieldX = 0; maxFieldY = 0; minFieldY = 0;
+                cameraDistanceZ = 100;
             }
             else
             {
                 //Max horizontal
-                maxCutDistance = Math.Abs(minCutX - maxCutX);
+                cameraDistanceZ = Math.Abs(minFieldX - maxFieldX);
 
-                if (maxCutDistance < 20) maxCutDistance = 20;
-                if (maxCutDistance > 6000) maxCutDistance = 6000;
+                if (cameraDistanceZ < 20) cameraDistanceZ = 20;
+                if (cameraDistanceZ > 6000) cameraDistanceZ = 6000;
 
-                CutCenterX = (maxCutX + minCutX) / 2.0;
-                CutCenterY = (maxCutY + minCutY) / 2.0;
-                lblCenterY.Text = CutCenterY.ToString("N2");
-                lblMaxAltitude.Text = maxCutY.ToString("N2");
-                lblMinAltitude.Text = minCutY.ToString("N2");
+                centerX = (maxFieldX + minFieldX) / 2.0;
+                centerY = (maxFieldY + minFieldY) / 2.0;
+                stripMinMax.Text=minFieldY.ToString("N2") + ":" + maxFieldY.ToString("N2");
+            }
+        }
+
+        public List<vec2> tList = new List<vec2>();
+        double slopeDraw = 0.0;
+
+        //calculate cut fill slope while moving mouse
+        private void CalculateCutFillWhileMouseMove()
+        {
+            vec2 temp = new vec2();
+            int i = 0;
+            double cut = 0; double fill = 0, delta, slope;
+
+            //empty the temp drawList
+            tList.Clear();
+
+            //make a line including current cursor position
+            int drawPts = ct.drawList.Count;
+            for (i = 0; i < drawPts; i++)
+            {
+                temp.easting = ct.drawList[i].easting;
+                temp.northing = ct.drawList[i].northing;
+                tList.Add(temp);
+            }
+            //add current screen point
+            tList.Add(screen2FieldPt);
+
+            drawPts = tList.Count-1;
+            int ptCnt = ct.ptList.Count;
+
+            if (drawPts > 0)
+            {
+                for (i = 0; i < ptCnt; i++)
+                {
+                    //points before the drawn line
+                    if (i < tList[0].easting) continue;
+
+                    //points after drawn line
+                    if (i > tList[drawPts].easting)continue;
+
+                    //find out where its between
+                    for (int j = 0; j < drawPts; j++)
+                    {
+                        if (i >= tList[j].easting && i <= tList[j + 1].easting)
+                        {
+                            slope = (tList[j + 1].northing - tList[j].northing) / (tList[j + 1].easting - tList[j].easting);
+                            delta = ((i - tList[j].easting) * slope) + tList[j].northing - ct.ptList[i].altitude;
+                            if (delta > 0)
+                            {
+                                fill += delta;
+                                delta = 0;
+                            }
+                            else
+                            {
+                                delta *= -1;
+                                cut += delta;
+                                delta = 0;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                //clean out the list
+                tList.Clear();
+
+                lblCut.Text = cut.ToString("N2");
+                lblFill.Text = fill.ToString("N2");
+
+                delta = (cut - fill);
+                if (delta >= 0) lblCutFillRatio.Text = " Pile: " + delta.ToString("N2") ;
+
+                else lblCutFillRatio.Text =   "Hole: "+ (delta).ToString("N2");
             }
         }
 

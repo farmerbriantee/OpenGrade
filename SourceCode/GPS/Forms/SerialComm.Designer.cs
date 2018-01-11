@@ -131,9 +131,7 @@ namespace OpenGrade
                 MessageBox.Show(e.Message + "\n\r" + "\n\r" + "Go to Settings -> COM Ports to Fix", "No AutoSteer Port Active");
 
                 //update port status label
-                stripPortAutoSteer.Text = "* *";
                 stripOnlineAutoSteer.Value = 1;
-                stripPortAutoSteer.ForeColor = Color.Red;
 
                 Properties.Settings.Default.setPort_wasAutoSteerConnected = false;
                 Properties.Settings.Default.Save();
@@ -145,8 +143,6 @@ namespace OpenGrade
                 spAutoSteer.DiscardInBuffer();
 
                 //update port status label
-                stripPortAutoSteer.Text = portNameAutoSteer;
-                stripPortAutoSteer.ForeColor = Color.ForestGreen;
                 stripOnlineAutoSteer.Value = 100;
 
 
@@ -169,9 +165,7 @@ namespace OpenGrade
                 }
 
                 //update port status label
-                stripPortAutoSteer.Text = "* *";
                 stripOnlineAutoSteer.Value = 1;
-                stripPortAutoSteer.ForeColor = Color.Red;
 
                 Properties.Settings.Default.setPort_wasAutoSteerConnected = false;
                 Properties.Settings.Default.Save();
@@ -267,11 +261,6 @@ namespace OpenGrade
 
                 MessageBox.Show(e.Message + "\n\r" + "\n\r" + "Go to Settings -> COM Ports to Fix", "No Arduino Port Active");
 
-                //update port status label
-                stripPortArduino.Text = "* *";
-                stripOnlineArduino.Value = 1;
-                stripPortArduino.ForeColor = Color.Red;
-
                 Properties.Settings.Default.setPort_wasRateRelayConnected = false;
                 Properties.Settings.Default.Save();
             }
@@ -280,12 +269,6 @@ namespace OpenGrade
             {
                 spRelay.DiscardOutBuffer();
                 spRelay.DiscardInBuffer();
-
-                //update port status label
-                stripPortArduino.Text = portNameRelaySection;
-                stripPortArduino.ForeColor = Color.ForestGreen;
-                stripOnlineArduino.Value = 100;
-
 
                 Properties.Settings.Default.setPort_portNameRateRelay = portNameRelaySection;
                 Properties.Settings.Default.setPort_wasRateRelayConnected = true;
@@ -305,11 +288,6 @@ namespace OpenGrade
                     WriteErrorLog("Closing Relay Serial Port" + e.ToString());
                     MessageBox.Show(e.Message, "Connection already terminated??");
                 }
-
-                //update port status label
-                stripPortArduino.Text = "* *";
-                stripOnlineArduino.Value = 1;
-                stripPortArduino.ForeColor = Color.Red;
 
                 Properties.Settings.Default.setPort_wasRateRelayConnected = false;
                 Properties.Settings.Default.Save();
@@ -376,9 +354,6 @@ namespace OpenGrade
                 //MessageBox.Show(exc.Message + "\n\r" + "\n\r" + "Go to Settings -> COM Ports to Fix", "No Serial Port Active");
                 WriteErrorLog("Open GPS Port " + e.ToString());
 
-                //update port status labels
-                stripPortGPS.Text = " * * ";
-                stripPortGPS.ForeColor = Color.Red;
                 stripOnlineGPS.Value = 1;
 
                 //SettingsPageOpen(0);
@@ -391,10 +366,6 @@ namespace OpenGrade
                 //discard any stuff in the buffers
                 sp.DiscardOutBuffer();
                 sp.DiscardInBuffer();
-
-                //update port status label
-                stripPortGPS.Text = portNameGPS + " " + baudRateGPS.ToString();
-                stripPortGPS.ForeColor = Color.ForestGreen;
 
                 Properties.Settings.Default.setPort_portNameGPS = portNameGPS;
                 Properties.Settings.Default.setPort_baudRate = baudRateGPS;
@@ -415,8 +386,6 @@ namespace OpenGrade
                 }
 
                 //update port status labels
-                stripPortGPS.Text = " * * " + baudRateGPS.ToString();
-                stripPortGPS.ForeColor = Color.ForestGreen;
                 stripOnlineGPS.Value = 1;
 
                 sp.Dispose();

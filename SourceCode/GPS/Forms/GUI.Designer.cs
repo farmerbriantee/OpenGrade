@@ -79,28 +79,28 @@ namespace OpenGrade
         //hide the left panel
         public void HideTabControl()
         {
-            if (tabControl1.Visible)
-            {
-                //tab will be gone
-                tabControl1.Visible = false;
-                openGLControl.Width = Width - 2;
-                openGLControl.Height = Height;
-                btnContour.Left = Width - 120;
-                btnZoomOut.Left = Width -120;
-                txtDistanceOffABLine.Left = Width/2 - 60;
-                txtDistanceOffABLine.Top = 80;
-            }
-            else
-            {
-                //tab will be visible
-                tabControl1.Visible = true;
-                openGLControl.Width = Width - 580;
-                openGLControl.Height = 325;
-                btnContour.Left = Width - 675;
-                btnZoomOut.Left = Width - 675;
-                txtDistanceOffABLine.Left = (Width - 630)/2 - 60;
-                txtDistanceOffABLine.Top = -1;
-            }
+            //if (tabControl1.Visible)
+            //{
+            //    //tab will be gone
+            //    tabControl1.Visible = false;
+            //    openGLControl.Width = Width - 2;
+            //    openGLControl.Height = Height;
+            //    btnContour.Left = Width - 120;
+            //    btnZoomOut.Left = Width -120;
+            //    txtDistanceOffABLine.Left = Width/2 - 60;
+            //    txtDistanceOffABLine.Top = 80;
+            //}
+            //else
+            //{
+            //    //tab will be visible
+            //    tabControl1.Visible = true;
+            //    openGLControl.Width = Width - 580;
+            //    openGLControl.Height = 325;
+            //    btnContour.Left = Width - 675;
+            //    btnZoomOut.Left = Width - 675;
+            //    txtDistanceOffABLine.Left = (Width - 630)/2 - 60;
+            //    txtDistanceOffABLine.Top = -1;
+            //}
         }
         
         //Open the dialog of tabbed settings
@@ -198,6 +198,7 @@ namespace OpenGrade
             camera.camSetDistance = zoomValue * zoomValue * -1;
             SetZoom();
         }
+
         //button for Manual On Off of the sections
         private void btnManualOffOn_Click(object sender, EventArgs e)
         {
@@ -206,9 +207,11 @@ namespace OpenGrade
                 case btnStates.Off:
                     manualBtnState = btnStates.Rec;
                     btnManualOffOn.Image = Properties.Resources.ManualOn;
-                    lblDrawSlope.Text = "***";
                     userDistance = 0;
-                    ct.cutList.Clear();
+                    lblCut.Text = "*";
+                    lblFill.Text = "*";
+                    lblCutFillRatio.Text = "*";
+                    lblDrawSlope.Text = "*";
 
                     break;
 
@@ -246,6 +249,7 @@ namespace OpenGrade
             camera.camSetDistance = zoomValue * zoomValue * -1;
             SetZoom();
         }
+
         //view tilt up down and saving in settings
         private void btnTiltUp_MouseDown(object sender, MouseEventArgs e)
         {
@@ -314,7 +318,6 @@ namespace OpenGrade
             Form form = new FormSteer(this);
             form.Show();
         }
-
         private void btnFileExplorer_Click(object sender, EventArgs e)
         {
             if (isJobStarted)
@@ -323,8 +326,6 @@ namespace OpenGrade
             }
             Process.Start(fieldsDirectory + currentFieldDirectory);
         }
-
-
 
         // Menu Items ------------------------------------------------------------------
 
@@ -706,12 +707,10 @@ namespace OpenGrade
         {
             SettingsUDP();
         }
-
         private void toolstripResetTrip_Click_1(object sender, EventArgs e)
         {
             userDistance = 0;
         }
-
         private void toolstripField_Click(object sender, EventArgs e)
         {
             JobNewOpenResume();
@@ -857,7 +856,7 @@ namespace OpenGrade
 
 
             //every half of a second update all status
-            if (statusUpdateCounter > 10)
+            if (statusUpdateCounter > 4)
             {
                 //reset the counter
                 statusUpdateCounter = 0;
@@ -865,19 +864,17 @@ namespace OpenGrade
                 //counter used for saving field in background
                 saveCounter++;
 
-                if (isMetric)
-                {
-                    lblAltitude.Text = Altitude;
-                }
-                else //imperial
-                {
-                    lblAltitude.Text = AltitudeFeet;
-                    ////Boundary
-                }
-
-
                 if (tabControl1.SelectedIndex == 0 && tabControl1.Visible)
                 {
+                    if (isMetric)
+                    {
+                        lblAltitude.Text = Altitude;
+                    }
+                    else //imperial
+                    {
+                        lblAltitude.Text = AltitudeFeet;
+                        ////Boundary
+                    }
 
                     //both
                     lblLatitude.Text = Latitude;
@@ -924,7 +921,6 @@ namespace OpenGrade
                 }
 
                 //not Metric/Standard units sensitive
-                stripHz.Text = NMEAHz + "Hz " + (int)(frameTime);
                 lblHeading.Text = Heading;
                 btnABLine.Text = PassNumber;
                 lblPureSteerAngle.Text = PureSteerAngle;

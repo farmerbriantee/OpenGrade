@@ -1,0 +1,30 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OpenGrade.Properties" GeneratedClassName="Vehicle">
+  <Profiles />
+  <Settings>
+    <Setting Name="setVehicle_antennaHeight" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="setVehicle_wheelbase" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="setVehicle_Name" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Default - </Value>
+    </Setting>
+    <Setting Name="setVehicle_goalPointLookAhead" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="setVehicle_maxAngularVelocity" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="setVehicle_maxSteerAngle" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">35</Value>
+    </Setting>
+    <Setting Name="setVehicle_toolWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">4</Value>
+    </Setting>
+    <Setting Name="setVehicle_minSlope" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">-0.001</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

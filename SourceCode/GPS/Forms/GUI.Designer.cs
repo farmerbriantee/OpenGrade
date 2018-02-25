@@ -436,9 +436,16 @@ namespace OpenGrade
                         delta = 0;
                     }
                 }
-
-                lblCut.Text = cut.ToString("N2");
-                lblFill.Text = fill.ToString("N2");
+                if (isMetric)
+                {
+                    lblCut.Text = cut.ToString("N2");
+                    lblFill.Text = fill.ToString("N2");
+                }
+                else
+                {
+                    lblCut.Text = (1.308*cut).ToString("N2");
+                    lblFill.Text = (1.308*fill).ToString("N2");
+                }
 
                 delta = (cut - fill);
                 lblCutFillRatio.Text = delta.ToString("N2");
@@ -466,7 +473,7 @@ namespace OpenGrade
 
         private void pbarCutBelow_Click(object sender, EventArgs e)
         {
-            if (barGraphMax-- < 1) barGraphMax = 1;
+            if (barGraphMax-- < 1.99) barGraphMax = 1;
             lblBarGraphMax.Text = barGraphMax.ToString();
         }
 
@@ -1087,7 +1094,15 @@ namespace OpenGrade
                 }
                 else
                 {
-                    lblCutDelta.Text = cutDelta.ToString("N1");
+                    if (isMetric)  //metric or imperial
+                    {
+                        lblCutDelta.Text = cutDelta.ToString("N1");
+                    }
+                    else
+                    {
+                        lblCutDelta.Text = (0.3937*cutDelta).ToString("N2");
+                    }
+
                     lblCutDelta.BackColor = SystemColors.ControlText;
 
                     if (cutDelta < 0)

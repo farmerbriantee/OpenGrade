@@ -234,7 +234,7 @@ namespace OpenGrade
                 sectionTriggerDistance = pn.Distance(pn.northing, pn.easting, prevContourPos.northing, prevContourPos.easting);
 
                 //section on off and points, contour points
-                if (sectionTriggerDistance > 1)
+                if (sectionTriggerDistance > 0.2)
                 {
                     prevContourPos.easting = pn.easting;
                     prevContourPos.northing = pn.northing;

@@ -661,14 +661,14 @@ namespace OpenGrade
             if (maxFieldX == -9999999 | minFieldX == 9999999 | maxFieldY == -9999999 | minFieldY == 9999999)
             {
                 maxFieldX = 0; minFieldX = 0; maxFieldY = 0; minFieldY = 0;
-                cameraDistanceZ = 100;
+                cameraDistanceZ = 10;
             }
             else
             {
                 //Max horizontal
                 cameraDistanceZ = Math.Abs(minFieldX - maxFieldX);
 
-                if (cameraDistanceZ < 20) cameraDistanceZ = 20;
+                if (cameraDistanceZ < 10) cameraDistanceZ = 10;
                 if (cameraDistanceZ > 6000) cameraDistanceZ = 6000;
 
                 centerX = (maxFieldX + minFieldX) / 2.0;

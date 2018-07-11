@@ -346,7 +346,7 @@ namespace OpenGrade
         }
         private void btnStartDraw_Click(object sender, EventArgs e)
         {
-            if (ct.ptList.Count > 50)
+            if (ct.ptList.Count > 5)
             {
                 cboxLastPass.Checked = false;
 

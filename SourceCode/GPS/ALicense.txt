@@ -7,8 +7,6 @@ OpenGrade - Agricultural Precision Software
 Brian Tischler
 Mannville Alberta Canada
 
-yesgogit@gmail.com
-
 
 The license in short form says.....
 If you are going to change this software, you must post the source code if you publish.
